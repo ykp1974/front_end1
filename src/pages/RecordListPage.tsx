@@ -1,0 +1,53 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { loadRecords } from '../services/storage';
+import { TradeRecord } from '../types/TradeRecord';
+
+const RecordListPage: React.FC = () => {
+  const [records, setRecords] = useState<TradeRecord[]>([]);
+
+  useEffect(() => {
+    setRecords(loadRecords());
+  }, []);
+
+  return (
+    <div>
+      <h1>投資記録一覧</h1>
+      <Link to="/records/new" style={{ marginBottom: '20px', display: 'inline-block' }}>
+        新規記録の追加
+      </Link>
+      {records.length === 0 ? (
+        <p>記録がありません。</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #ccc' }}>
+              <th style={{ padding: '8px', textAlign: 'left' }}>銘柄名</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>ティッカー</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>取引種別</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>日付</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>価格</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>詳細</th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((record) => (
+              <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '8px' }}>{record.symbolName}</td>
+                <td style={{ padding: '8px' }}>{record.ticker}</td>
+                <td style={{ padding: '8px' }}>{record.tradeType}</td>
+                <td style={{ padding: '8px' }}>{record.tradeDate}</td>
+                <td style={{ padding: '8px' }}>{record.price.toLocaleString()}</td>
+                <td style={{ padding: '8px' }}>
+                  <Link to={`/records/${record.id}`}>詳細を見る</Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+};
+
+export default RecordListPage;
