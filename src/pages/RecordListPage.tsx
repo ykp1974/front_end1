@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { loadRecords } from '../services/storage';
-import { TradeRecord } from '../types/TradeRecord';
+import type { TradeRecord } from '../types/TradeRecord';
 
 const RecordListPage: React.FC = () => {
   const [records, setRecords] = useState<TradeRecord[]>([]);

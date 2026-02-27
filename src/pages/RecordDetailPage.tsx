@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRecordById, getRecordsByTicker } from '../services/storage';
-import { TradeRecord } from '../types/TradeRecord';
+import type { TradeRecord } from '../types/TradeRecord';
 
 const RecordDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

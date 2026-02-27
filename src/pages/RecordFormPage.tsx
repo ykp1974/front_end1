@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addRecord } from '../services/storage';
-import { TradeRecord, TradeType } from '../types/TradeRecord';
+import type { TradeRecord } from '../types/TradeRecord';
 import { v4 as uuidv4 } from 'uuid'; // ユニークID生成のため
 
 const RecordFormPage: React.FC = () => {

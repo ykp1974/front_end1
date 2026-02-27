@@ -1,4 +1,4 @@
-import { TradeRecord } from '../types/TradeRecord';
+import type { TradeRecord } from '../types/TradeRecord';
 
 const LOCAL_STORAGE_KEY = 'investment_records';
 
