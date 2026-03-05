@@ -2,6 +2,38 @@ import type { TradeRecord } from '../types/TradeRecord';
 
 const LOCAL_STORAGE_KEY = 'investment_records';
 
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzVT4X5yJpBDuD4nLxF94Q8VUphihmBgjYed4tTfD94NhgXZMQunILzvp20x8_P_NtE/exec';
+
+export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => {
+  try {
+    // 従来のLocalStorageにもバックアップとして残す場合は残す
+    // localStorage.setItem(`record_${record.id}`, JSON.stringify(record));
+
+    await fetch(GAS_WEBAPP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ record }),
+      mode: 'no-cors', // ブラウザの制限を回避
+      headers: {
+        'Content-Type': 'text/plain', // プリフライトリクエストを回避
+      },
+    });
+
+    // 戻り値を判断しない（no-corsのため）
+    return true;
+  } catch (error) {
+    console.error('Network Error:', error);
+    return false;
+  }
+};
+
+/**
+ * 全データ取得（GASから読み込む場合）
+ */
+export const fetchRecordsFromGAS = async (): Promise<TradeRecord[]> => {
+  // 必要に応じて doGet(e) をGAS側に実装し、ここでfetchする
+  return []; 
+};
+
 /**
  * LocalStorageから全ての投資記録をロードする。
  * @returns TradeRecordの配列

@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { addRecord } from '../services/storage';
 import type { TradeRecord } from '../types/TradeRecord';
-import { v4 as uuidv4 } from 'uuid'; // ユニークID生成のため
+import { saveRecordToGAS } from '../services/storage'; 
 
 const RecordFormPage: React.FC = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'>>({
     symbolName: '',
     ticker: '',
@@ -23,15 +20,29 @@ const RecordFormPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newRecord: TradeRecord = {
-      ...formData,
-      id: uuidv4(), // ユニークIDを生成
-      createdAt: new Date().toISOString(),
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // ページリロードを防止
+    // FormDataを使用して入力値を取得
+    const formData = new FormData(event.currentTarget);
+        
+    // TradeRecord型に合わせたオブジェクトを作成 
+    const record: TradeRecord = {
+      id: crypto.randomUUID(), // IDの生成例
+      symbolName: formData.get('symbolName') as string,
+      ticker: formData.get('ticker') as string,
+      tradeDate: formData.get('tradeDate') as string,
+      tradeType: formData.get('tradeType') as 'BUY' | 'SELL', // select要素などを想定
+      price: Number(formData.get('price')),
+      reason: formData.get('reason') as string,
+      createdAt: new Date().toISOString(), // 現在時刻を文字列で保存
     };
-    addRecord(newRecord);
-    navigate('/records');
+
+    const success = await saveRecordToGAS(record); 
+    if (success) {
+      alert("スプレッドシートに保存しました！");
+    } else {
+      alert("保存に失敗しました。");
+    }
   };
 
   return (
