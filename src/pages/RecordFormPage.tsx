@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
-import { saveRecordToGAS } from '../services/storage'; 
+import { saveRecordToGAS } from '../services/storage';
 
 const RecordFormPage: React.FC = () => {
   const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'>>({
@@ -12,8 +12,27 @@ const RecordFormPage: React.FC = () => {
     reason: '',
   });
 
+  // 追加：銘柄リストのステート
+  const [tickers, setTickers] = useState<{ symbol: string, name: string }[]>([]);
+  // 追加：起動時にスプシから銘柄リストを取得
+  useEffect(() => {
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyBJkk1V0chHEQNbpdoddQ9eoem2ygOQelP0cSrfSDE3Fo7H6-DzlfyLLUiOayY8E/exec'; // ChartShapeCheckerと同じURL
+    fetch(GAS_URL)
+      .then(res => res.json())
+      .then(data => setTickers(data.tickers))
+      .catch(err => console.error("銘柄取得失敗:", err));
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    // 追加：セレクトボックスで銘柄が選ばれた時の自動入力処理
+    if (name === 'tickerSelector') {
+      const selected = tickers.find(t => t.symbol === value);
+      if (selected) {
+        setFormData(prev => ({ ...prev, ticker: selected.symbol, symbolName: selected.name }));
+      }
+      return;
+    }
     setFormData((prevData) => ({
       ...prevData,
       [name]: name === 'price' ? Number(value) : value,
@@ -24,7 +43,7 @@ const RecordFormPage: React.FC = () => {
     event.preventDefault(); // ページリロードを防止
     // FormDataを使用して入力値を取得
     const formData = new FormData(event.currentTarget);
-        
+
     // TradeRecord型に合わせたオブジェクトを作成 
     const record: TradeRecord = {
       id: crypto.randomUUID(), // IDの生成例
@@ -37,7 +56,7 @@ const RecordFormPage: React.FC = () => {
       createdAt: new Date().toISOString(), // 現在時刻を文字列で保存
     };
 
-    const success = await saveRecordToGAS(record); 
+    const success = await saveRecordToGAS(record);
     if (success) {
       alert("スプレッドシートに保存しました！");
     } else {
@@ -49,6 +68,16 @@ const RecordFormPage: React.FC = () => {
     <div>
       <h1>新規投資記録の追加</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
+        {/* 追加：銘柄選択用ListBox */}
+        <div>
+          <label>銘柄リストから選択:</label>
+          <select name="tickerSelector" onChange={handleChange} style={{ width: '100%', padding: '8px' }}>
+            <option value="">-- 銘柄を選択 --</option>
+            {tickers.map(t => (
+              <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="symbolName">銘柄名:</label>
           <input
