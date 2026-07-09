@@ -16,7 +16,7 @@ const RecordFormPage: React.FC = () => {
   const [tickers, setTickers] = useState<{ symbol: string, name: string }[]>([]);
   // 追加：起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyBJkk1V0chHEQNbpdoddQ9eoem2ygOQelP0cSrfSDE3Fo7H6-DzlfyLLUiOayY8E/exec'; // ChartShapeCheckerと同じURL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJq7lYKUQ1t42Y0VSmM_6MZ2orwdAeCwgYZQeEMppfd8pIRJlOHJPpNPmRsOqiIuM/exec';
     fetch(GAS_URL)
       .then(res => res.json())
       .then(data => setTickers(data.tickers))
@@ -29,7 +29,9 @@ const RecordFormPage: React.FC = () => {
     if (name === 'tickerSelector') {
       const selected = tickers.find(t => t.symbol === value);
       if (selected) {
-        setFormData(prev => ({ ...prev, ticker: selected.symbol, symbolName: selected.name }));
+        // 末尾4桁のみとする
+        const cleanTicker = selected.symbol.slice(-4);
+        setFormData(prev => ({ ...prev, ticker: cleanTicker, symbolName: selected.name }));
       }
       return;
     }
@@ -61,6 +63,39 @@ const RecordFormPage: React.FC = () => {
       alert("スプレッドシートに保存しました！");
     } else {
       alert("保存に失敗しました。");
+    }
+  };
+
+  // 1. fetch関数の追加
+  const fetchLatestPrice = async () => {
+    if (!formData.ticker) return;
+
+    // 公開されたCSVのURL
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1v4cTk72DuaaZNzQqfLVg5uxZoxwVpiuDCIihYrLnTXIrSys3_z50DhlEOhDdLScVeKOXs8zr6Zin/pub?gid=0&single=true&output=csv';
+
+    try {
+      const res = await fetch(CSV_URL);
+      const text = await res.text();
+
+      // CSVをパースして該当ティッカーを探す
+      const rows = text.split('\n').map(row => row.split(','));
+      // 行を検索（データ行が2行目以降と想定）
+      const foundRow = rows.find(r => r[2] === formData.ticker);
+
+      if (foundRow) {
+        // "￥4,430.00" から "4430.00" に変換する処理
+        const rawPrice = foundRow[3];
+        const numericPrice = Number(rawPrice.replace(/[￥,]/g, ''));
+
+        if (!isNaN(numericPrice)) {
+          setFormData(prev => ({ ...prev, price: numericPrice }));
+        } else {
+          console.error("数値変換失敗:", rawPrice);
+          alert("価格の数値変換に失敗しました");
+        }
+      }
+    } catch (err) {
+      console.error("価格取得失敗:", err);
     }
   };
 
@@ -141,6 +176,13 @@ const RecordFormPage: React.FC = () => {
             step="0.01"
             style={{ width: '100%', padding: '8px' }}
           />
+          <button
+            type="button"
+            onClick={fetchLatestPrice} // ここで価格取得！
+            style={{ padding: '8px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+          >
+            取得
+          </button>
         </div>
         <div>
           <label htmlFor="reason">理由:</label>
