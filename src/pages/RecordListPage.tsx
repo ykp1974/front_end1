@@ -5,9 +5,30 @@ import type { TradeRecord } from '../types/TradeRecord';
 
 const RecordListPage: React.FC = () => {
   const [records, setRecords] = useState<TradeRecord[]>([]);
-
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    setRecords(loadRecords());
+    // setRecords(loadRecords()); // 旧処理…LocalStorageから取得
+    // データを取得する関数
+    const fetchRecords = async () => {
+      // あなたのGASウェブアプリURL（doGetが実装されているもの）
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbz6UCNAyom5PzEySX60ocQ7yjltzYUWQmdM-wMpmDg07H_ZWWwhieTnymcl6nyi7JoZ/exec';
+
+      try {
+        const response = await fetch(GAS_URL);
+        if (!response.ok) throw new Error('データの取得に失敗しました');
+
+        const data: TradeRecord[] = await response.json();
+        setRecords(data);
+      } catch (err) {
+        console.error("読み込みエラー:", err);
+        setError("記録の読み込みに失敗しました。");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecords();
   }, []);
 
   return (
