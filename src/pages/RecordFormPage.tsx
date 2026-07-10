@@ -31,7 +31,14 @@ const RecordFormPage: React.FC = () => {
       if (selected) {
         // 末尾4桁のみとする
         const cleanTicker = selected.symbol.slice(-4);
-        setFormData(prev => ({ ...prev, ticker: cleanTicker, symbolName: selected.name }));
+        // 本日日付の取得 (yyyy-mm-dd 形式)
+        const today = new Date().toISOString().split('T')[0];
+        setFormData(prev => ({
+          ...prev,
+          ticker: cleanTicker,
+          symbolName: selected.name,
+          tradeDate: today // 日付自動入力
+        }));
       }
       return;
     }
