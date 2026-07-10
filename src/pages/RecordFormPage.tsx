@@ -37,7 +37,8 @@ const RecordFormPage: React.FC = () => {
           ...prev,
           ticker: cleanTicker,
           symbolName: selected.name,
-          tradeDate: today // 日付自動入力
+          tradeDate: today, // 日付自動入力
+          reason: selected.symbol.substring(0, selected.symbol.length - 4) // 銘柄コードを除いた部分をreasonに自動入力
         }));
       }
       return;
