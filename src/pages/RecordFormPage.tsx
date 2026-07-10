@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
 
+const PREFIX_MAP = {
+  "[w]": "ダブルボトム",
+  "[m]": "移動平均線乖離",
+  "[r]": "レンジブレイク",
+  // 必要に応じて追加してください
+};
+
 const RecordFormPage: React.FC = () => {
   const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'>>({
     symbolName: '',
@@ -33,12 +40,17 @@ const RecordFormPage: React.FC = () => {
         const cleanTicker = selected.symbol.slice(-4);
         // 本日日付の取得 (yyyy-mm-dd 形式)
         const today = new Date().toISOString().split('T')[0];
+        // 接頭句を特定 (例: "[w]")
+        const prefix = Object.keys(PREFIX_MAP).find(p => remaining.startsWith(p));
+
+        // 接頭句があればそれをreasonに、なければ空文字に
+        const autoReason = prefix ? PREFIX_MAP[prefix] : '';
         setFormData(prev => ({
           ...prev,
           ticker: cleanTicker,
           symbolName: selected.name,
           tradeDate: today, // 日付自動入力
-          reason: selected.symbol.substring(0, selected.symbol.length - 4) // 銘柄コードを除いた部分をreasonに自動入力
+          reason: autoReason
         }));
       }
       return;
