@@ -16,6 +16,7 @@ const RecordDetailPage: React.FC = () => {
 
         // ローカル関数(getRecordById)を使わず、取得した全データから探す
         const found = allRecords.find(r => String(r.id) === String(id));
+        console.log("GASから取得した詳細データ:", found);
         setRecord(found);
 
         if (found) {
@@ -41,8 +42,9 @@ const RecordDetailPage: React.FC = () => {
         <h2>{record.symbolName} ({record.ticker})</h2>
         <p><strong>取引種別:</strong> {record.tradeType}</p>
         <p><strong>取引日付:</strong> {record.tradeDate}</p>
-        <p><strong>価格:</strong> {record.price ? record.price.toLocaleString() : '0'}</p>
+        <p><strong>価格:</strong> {record.price.toLocaleString()}</p>
         <p><strong>理由:</strong> {record.reason}</p>
+        <p><strong>記録日時:</strong> {new Date(record.createdAt).toLocaleString()}</p>
       </div>
 
       {relatedRecords.length > 0 && (
