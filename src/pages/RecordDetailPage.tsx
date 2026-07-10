@@ -8,20 +8,18 @@ const RecordDetailPage: React.FC = () => {
   const [relatedRecords, setRelatedRecords] = useState<TradeRecord[]>([]);
 
   useEffect(() => {
-    console.log('id==>' + id);
-    // 全データをGASから再取得して絞り込む
     const fetchData = async () => {
       const GAS_URL = 'https://script.google.com/macros/s/AKfycbwNp0te3WllYWonguzgZ4N06HLEhK3FtsTg13tW2gmShDOP-Oa2P8SkaIDTgCGtDxz6/exec';
       try {
         const res = await fetch(GAS_URL);
         const allRecords: TradeRecord[] = await res.json();
 
-        // 1. IDで現在のレコードを特定
+        // ローカル関数(getRecordById)を使わず、取得した全データから探す
         const found = allRecords.find(r => String(r.id) === String(id));
         setRecord(found);
 
-        // 2. 同一ティッカーの他のレコードを取得
         if (found) {
+          // 同一ティッカーの他のレコードも全データから絞り込む
           setRelatedRecords(allRecords.filter(r => r.ticker === found.ticker && r.id !== id));
         }
       } catch (err) {
