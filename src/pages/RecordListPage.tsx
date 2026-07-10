@@ -18,6 +18,7 @@ const RecordListPage: React.FC = () => {
         if (!response.ok) throw new Error('データの取得に失敗しました');
 
         const data: TradeRecord[] = await response.json();
+        console.log("★GASから取得した詳細データ:", data);
         setRecords(data);
       } catch (err) {
         console.error("読み込みエラー:", err);
