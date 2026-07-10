@@ -3,9 +3,9 @@ import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
 
 const PREFIX_MAP: Record<string, string> = {
-  "[w]": "ダブルボトム",
-  "[m]": "移動平均線乖離",
-  "[r]": "レンジブレイク",
+  "[w]": "ダブルボトム ",
+  "[m]": "移動平均線乖離 ",
+  "[r]": "レンジブレイク ",
   // 必要に応じて追加してください
 };
 
@@ -51,7 +51,7 @@ const RecordFormPage: React.FC = () => {
           ticker: cleanTicker,
           symbolName: selected.name,
           tradeDate: today, // 日付自動入力
-          reason: autoReason
+          reason: remaining + ":" + autoReason
         }));
       }
       return;
