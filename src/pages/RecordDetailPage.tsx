@@ -11,7 +11,7 @@ const RecordDetailPage: React.FC = () => {
     console.log('id==>' + id);
     // 全データをGASから再取得して絞り込む
     const fetchData = async () => {
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbzypagOvfpTLsmA20BnT54MUIGENtSlKx2Vfryp6LEnftnp1tnHp2bv0KCCdmhP1eRe/exec';
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbwNp0te3WllYWonguzgZ4N06HLEhK3FtsTg13tW2gmShDOP-Oa2P8SkaIDTgCGtDxz6/exec';
       try {
         const res = await fetch(GAS_URL);
         const allRecords: TradeRecord[] = await res.json();
