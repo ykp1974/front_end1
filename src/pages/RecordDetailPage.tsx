@@ -9,7 +9,7 @@ const RecordDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbwrIgxq64gBp6aOS1AuYJqrKNHqprcGcPaeZSENJNjmqyxkHrS7zaCfqOo9ZC8ISvNF/exec';
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxhV5-6jsUNpnaIyah1-fGvT-GuGTcIjuNBbQWhiEpdPAmUVOtyD4E_nDNu4U95b0S7/exec';
       try {
         const res = await fetch(GAS_URL);
         const allRecords: TradeRecord[] = await res.json();
