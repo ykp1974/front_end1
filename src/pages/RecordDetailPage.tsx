@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getRecordById, getRecordsByTicker } from '../services/storage';
 import type { TradeRecord } from '../types/TradeRecord';
 
 const RecordDetailPage: React.FC = () => {
@@ -9,22 +8,30 @@ const RecordDetailPage: React.FC = () => {
   const [relatedRecords, setRelatedRecords] = useState<TradeRecord[]>([]);
 
   useEffect(() => {
-    if (id) {
-      const foundRecord = getRecordById(id);
-      setRecord(foundRecord);
+    // 全データをGASから再取得して絞り込む
+    const fetchData = async () => {
+      const GAS_URL = 'https://script.google.com/macros/s/（あなたのID）/exec';
+      try {
+        const res = await fetch(GAS_URL);
+        const allRecords: TradeRecord[] = await res.json();
 
-      if (foundRecord) {
-        // 同一tickerの他のレコードを取得
-        const allRecords = getRecordsByTicker(foundRecord.ticker);
-        // 現在のレコードを除く
-        setRelatedRecords(allRecords.filter(rec => rec.id !== id));
+        // 1. IDで現在のレコードを特定
+        const found = allRecords.find(r => r.id === id);
+        setRecord(found);
+
+        // 2. 同一ティッカーの他のレコードを取得
+        if (found) {
+          setRelatedRecords(allRecords.filter(r => r.ticker === found.ticker && r.id !== id));
+        }
+      } catch (err) {
+        console.error("詳細取得エラー:", err);
       }
-    }
+    };
+
+    fetchData();
   }, [id]);
 
-  if (!record) {
-    return <div>記録が見つかりません。</div>;
-  }
+  if (!record) return <div>記録が見つかりません。</div>;
 
   return (
     <div>
