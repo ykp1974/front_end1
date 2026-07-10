@@ -8,6 +8,7 @@ const RecordDetailPage: React.FC = () => {
   const [relatedRecords, setRelatedRecords] = useState<TradeRecord[]>([]);
 
   useEffect(() => {
+    console.log('id==>' + id);
     // 全データをGASから再取得して絞り込む
     const fetchData = async () => {
       const GAS_URL = 'https://script.google.com/macros/s/AKfycbz6UCNAyom5PzEySX60ocQ7yjltzYUWQmdM-wMpmDg07H_ZWWwhieTnymcl6nyi7JoZ/exec';
@@ -16,7 +17,7 @@ const RecordDetailPage: React.FC = () => {
         const allRecords: TradeRecord[] = await res.json();
 
         // 1. IDで現在のレコードを特定
-        const found = allRecords.find(r => r.id === id);
+        const found = allRecords.find(r => String(r.id) === String(id));
         setRecord(found);
 
         // 2. 同一ティッカーの他のレコードを取得

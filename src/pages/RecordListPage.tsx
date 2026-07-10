@@ -57,11 +57,11 @@ const RecordListPage: React.FC = () => {
           <tbody>
             {records.map((record) => (
               <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '8px' }}>{record.symbolName}</td>
+                <td style={{ padding: '8px' }}>{record.symbolName}</td> {/* 名前表示 */}
                 <td style={{ padding: '8px' }}>{record.ticker}</td>
                 <td style={{ padding: '8px' }}>{record.tradeType}</td>
                 <td style={{ padding: '8px' }}>{record.tradeDate}</td>
-                <td style={{ padding: '8px' }}>{record.price.toLocaleString()}</td>
+                <td style={{ padding: '8px' }}>{record.price?.toLocaleString()}</td>
                 <td style={{ padding: '8px' }}>
                   <Link to={`/records/${record.id}`}>詳細を見る</Link>
                 </td>
