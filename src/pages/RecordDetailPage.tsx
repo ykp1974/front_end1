@@ -9,14 +9,14 @@ const RecordDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxhV5-6jsUNpnaIyah1-fGvT-GuGTcIjuNBbQWhiEpdPAmUVOtyD4E_nDNu4U95b0S7/exec';
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkuDHPUujLRQfDpL9HaNcWt2fnsKPmD6PM9fb9JEwgJZhs4nU1tvX4HXn6wAziS-4t/exec';
       try {
         const res = await fetch(GAS_URL);
         const allRecords: TradeRecord[] = await res.json();
 
         // ローカル関数(getRecordById)を使わず、取得した全データから探す
         const found = allRecords.find(r => String(r.id) === String(id));
-        console.log("GASから取得した詳細データ:", found);
+        console.log("id:", id);
         setRecord(found);
 
         if (found) {
