@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { loadRecords } from '../services/storage';
 import type { TradeRecord } from '../types/TradeRecord';
 
 const RecordListPage: React.FC = () => {
@@ -37,7 +36,11 @@ const RecordListPage: React.FC = () => {
       <Link to="/records/new" style={{ marginBottom: '20px', display: 'inline-block' }}>
         新規記録の追加
       </Link>
-      {records.length === 0 ? (
+      {loading ? (
+        <p>読み込み中...</p>
+      ) : error ? (
+        <p style={{ color: 'red' }}>{error}</p>
+      ) : records.length === 0 ? (
         <p>記録がありません。</p>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
