@@ -11,7 +11,7 @@ const RecordListPage: React.FC = () => {
     // データを取得する関数
     const fetchRecords = async () => {
       // あなたのGASウェブアプリURL（doGetが実装されているもの）
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbz10QUbyLfaqTeYLjyFN0ZJljNtgUC-hY1ab5OmilFfCQJ2UKsg-LL5KekeXe4o-G0/exec';
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycby742GJBMbnhM5NY_1LxHtxVfg6RpL6YztTH5lsyNeklY2GA8YlOBgcndMA_2iyzT3i/exec';
 
       try {
         const response = await fetch(GAS_URL);
