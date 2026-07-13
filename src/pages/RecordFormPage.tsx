@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 
 const PREFIX_MAP: Record<string, string> = {
   "[w]": "ダブルボトム ",
@@ -138,6 +138,21 @@ const RecordFormPage: React.FC = () => {
   };
   return (
     <div>
+      {/* 一覧に戻るリンクを追加 */}
+      <Link
+        to="/records"
+        style={{
+          display: 'inline-block',
+          marginBottom: '15px',
+          padding: '5px 10px',
+          backgroundColor: '#e0e0e0',
+          color: '#333',
+          textDecoration: 'none',
+          borderRadius: '4px'
+        }}
+      >
+        ← 一覧に戻る
+      </Link>
       <h1>新規投資記録の追加</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
         {/* 追加：銘柄選択用ListBox */}
