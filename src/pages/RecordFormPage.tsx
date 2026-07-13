@@ -37,6 +37,9 @@ const RecordFormPage: React.FC = () => {
 
   useEffect(() => {
     if (prefill) {
+      if (formData.ticker === prefill.ticker && formData.price === prefill.price) {
+        return;
+      }
       setFormData(prev => ({
         ...prev,
         symbolName: prefill.symbolName || '',
