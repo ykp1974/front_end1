@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom'; // Link を追加
 
 const PREFIX_MAP: Record<string, string> = {
   "[w]": "ダブルボトム ",
@@ -18,17 +18,17 @@ const RecordFormPage: React.FC = () => {
     tradeType: 'BUY', // デフォルト値
     price: 0,
     reason: '',
-    originPrice: null as number | null, // 初期値はnull
   });
 
   // 追加：銘柄リストのステート
   const [tickers, setTickers] = useState<{ symbol: string, name: string }[]>([]);
   const location = useLocation();
   const prefill = location.state; // 遷移時に送ったデータがここに入ります
+  const [isInitialized, setIsInitialized] = useState(false); // ★フラグを追加
 
   // 追加：起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZ-LFk0JXOFrn251F0YQVUHT-o704bjQbDkPCJyOgIDokDGtpxCd2sZC1vNvYnloam/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJq7lYKUQ1t42Y0VSmM_6MZ2orwdAeCwgYZQeEMppfd8pIRJlOHJPpNPmRsOqiIuM/exec';
     fetch(GAS_URL)
       .then(res => res.json())
       .then(data => setTickers(data.tickers))
@@ -36,22 +36,20 @@ const RecordFormPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (prefill) {
-      if (formData.ticker === prefill.ticker && formData.price === prefill.price) {
-        return;
-      }
+    if (prefill && !isInitialized) {
+      // すでに初期化済みなら何もしない
+      if (isInitialized) return;
       setFormData(prev => ({
         ...prev,
         symbolName: prefill.symbolName || '',
         ticker: prefill.ticker || '',
         tradeType: prefill.tradeType || 'BUY',
         price: prefill.price || 0,
-        tradeDate: prefill.tradeDate || '',
-        originPrice: prefill.originPrice
+        tradeDate: prefill.tradeDate || ''
       }));
-      console.log('originPrice->' + prefill.originPrice);
+      setIsInitialized(true); // ★フラグを立てる
     }
-  }, [prefill]);
+  }, [prefill, isInitialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -88,22 +86,18 @@ const RecordFormPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // ページリロードを防止
     // FormDataを使用して入力値を取得
-    // const formData = new FormData(event.currentTarget);
+    const formData = new FormData(event.currentTarget);
 
     // TradeRecord型に合わせたオブジェクトを作成 
     const record: TradeRecord = {
       id: crypto.randomUUID(), // IDの生成例
-      symbolName: formData.symbolName,
-      ticker: formData.ticker,
-      tradeDate: formData.tradeDate,
-      tradeType: formData.tradeType,
-      price: formData.price,
-      reason: formData.reason,
-      createdAt: new Date().toISOString(),
-      // 修正2: ステートの値を参照して計算
-      profit: formData.originPrice
-        ? formData.price - formData.originPrice
-        : 0
+      symbolName: formData.get('symbolName') as string,
+      ticker: formData.get('ticker') as string,
+      tradeDate: formData.get('tradeDate') as string,
+      tradeType: formData.get('tradeType') as 'BUY' | 'SELL', // select要素などを想定
+      price: Number(formData.get('price')),
+      reason: formData.get('reason') as string,
+      createdAt: new Date().toISOString(), // 現在時刻を文字列で保存
     };
 
     const success = await saveRecordToGAS(record);
@@ -119,7 +113,8 @@ const RecordFormPage: React.FC = () => {
     if (!formData.ticker) return;
 
     // 公開されたCSVのURL
-    const CSV_URL = 'https://script.google.com/macros/s/AKfycbwZ-LFk0JXOFrn251F0YQVUHT-o704bjQbDkPCJyOgIDokDGtpxCd2sZC1vNvYnloam/exec';
+    // ★ここはGASデプロイ時に書き換えない！！★
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1v4cTk72DuaaZNzQqfLVg5uxZoxwVpiuDCIihYrLnTXIrSys3_z50DhlEOhDdLScVeKOXs8zr6Zin/pub?gid=0&single=true&output=csv';
 
     try {
       const res = await fetch(CSV_URL);
@@ -148,17 +143,18 @@ const RecordFormPage: React.FC = () => {
   };
   return (
     <div>
-      {/* 一覧に戻るリンクを追加 */}
+      {/* ここに追加 */}
       <Link
         to="/records"
         style={{
           display: 'inline-block',
           marginBottom: '15px',
-          padding: '5px 10px',
-          backgroundColor: '#e0e0e0',
+          padding: '8px 16px',
+          backgroundColor: '#f0f0f0',
           color: '#333',
           textDecoration: 'none',
-          borderRadius: '4px'
+          borderRadius: '4px',
+          border: '1px solid #ccc'
         }}
       >
         ← 一覧に戻る
@@ -258,22 +254,9 @@ const RecordFormPage: React.FC = () => {
             style={{ width: '100%', padding: '8px' }}
           />
         </div>
-        <div style={{ marginTop: '20px' }}>
-          {prefill ? (
-            // 反対売買専用のボタン
-            <button
-              type="submit"
-              onClick={() => setFormData(prev => ({ ...prev, isPositionClose: true }))} // 送信フラグを立てる
-              style={{ padding: '10px 20px', backgroundColor: '#d9534f', color: 'white' }}
-            >
-              決済取引として登録（収支を記録）
-            </button>
-          ) : (
-            <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
-              記録を保存
-            </button>
-          )}
-        </div>
+        <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
+          記録を保存
+        </button>
       </form>
     </div>
   );
