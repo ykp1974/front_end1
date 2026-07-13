@@ -10,6 +10,8 @@ const RecordDetailPage: React.FC = () => {
   const [relatedRecords, setRelatedRecords] = useState<TradeRecord[]>([]);
   const [currentPrice, setCurrentPrice] = useState<string>('');
   const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(true);
+
   // 取得価格（record.price）と現在値の差分を計算
   // priceは文字列で保存されている可能性があるため、Numberで数値化します
   const profit = currentPrice !== '' ? Number(currentPrice) - Number(record?.price || 0) : null;
@@ -28,6 +30,7 @@ const RecordDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // 開始時にセット
       const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkuDHPUujLRQfDpL9HaNcWt2fnsKPmD6PM9fb9JEwgJZhs4nU1tvX4HXn6wAziS-4t/exec';
       try {
         const res = await fetch(GAS_URL);
@@ -44,6 +47,8 @@ const RecordDetailPage: React.FC = () => {
         }
       } catch (err) {
         console.error("詳細取得エラー:", err);
+      } finally {
+        setLoading(false); // 終わったら必ず解除        
       }
     };
 
