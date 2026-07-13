@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
+import { useLocation } from 'react-router-dom';
 
 const PREFIX_MAP: Record<string, string> = {
   "[w]": "ダブルボトム ",
@@ -21,6 +22,9 @@ const RecordFormPage: React.FC = () => {
 
   // 追加：銘柄リストのステート
   const [tickers, setTickers] = useState<{ symbol: string, name: string }[]>([]);
+  const location = useLocation();
+  const prefill = location.state; // 遷移時に送ったデータがここに入ります
+
   // 追加：起動時にスプシから銘柄リストを取得
   useEffect(() => {
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJq7lYKUQ1t42Y0VSmM_6MZ2orwdAeCwgYZQeEMppfd8pIRJlOHJPpNPmRsOqiIuM/exec';
@@ -29,6 +33,19 @@ const RecordFormPage: React.FC = () => {
       .then(data => setTickers(data.tickers))
       .catch(err => console.error("銘柄取得失敗:", err));
   }, []);
+
+  useEffect(() => {
+    if (prefill) {
+      setFormData(prev => ({
+        ...prev,
+        symbolName: prefill.symbolName || '',
+        ticker: prefill.ticker || '',
+        tradeType: prefill.tradeType || 'BUY',
+        price: prefill.price || 0,
+        tradeDate: prefill.tradeDate || ''
+      }));
+    }
+  }, [prefill]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -119,7 +136,6 @@ const RecordFormPage: React.FC = () => {
       console.error("価格取得失敗:", err);
     }
   };
-
   return (
     <div>
       <h1>新規投資記録の追加</h1>

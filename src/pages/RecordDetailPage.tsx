@@ -1,11 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { TradeRecord } from '../types/TradeRecord';
+import { useNavigate } from 'react-router-dom';
+
 
 const RecordDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [record, setRecord] = useState<TradeRecord | undefined>(undefined);
   const [relatedRecords, setRelatedRecords] = useState<TradeRecord[]>([]);
+  const [currentPrice, setCurrentPrice] = useState<string>('');
+  const navigate = useNavigate();
+  // 取得価格（record.price）と現在値の差分を計算
+  // priceは文字列で保存されている可能性があるため、Numberで数値化します
+  const profit = currentPrice !== '' ? Number(currentPrice) - Number(record?.price || 0) : null;
+
+  const handleRegisterOppositeTrade = () => {
+    navigate('/record-form', {
+      state: {
+        symbolName: record?.symbolName,
+        ticker: record?.ticker,
+        tradeType: record?.tradeType === 'BUY' ? 'SELL' : 'BUY', // 逆の種別
+        price: currentPrice, // 入力した現在値
+        tradeDate: new Date().toISOString().split('T')[0] // 現在日付
+      }
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +60,7 @@ const RecordDetailPage: React.FC = () => {
       <div style={{ border: '1px solid #ccc', padding: '15px', margin: '20px 0' }}>
         <h2>{record.symbolName} ({record.ticker})</h2>
         <p><strong>取引種別:</strong> {record.tradeType}</p>
-        <p><strong>取引日付:</strong> {record.tradeDate}</p>
+        <p><strong>取引日付:</strong> {new Date(record.tradeDate).toLocaleString()}</p>
         <p><strong>価格:</strong> {record.price.toLocaleString()}</p>
         <p><strong>理由:</strong> {record.reason}</p>
         <p><strong>記録日時:</strong> {new Date(record.createdAt).toLocaleString()}</p>
@@ -76,6 +95,32 @@ const RecordDetailPage: React.FC = () => {
           </table>
         </div>
       )}
+      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+        <h3>評価額計算</h3>
+        <div style={{ marginBottom: '10px' }}>
+          <label>現在の価格を手動入力: </label>
+          <input
+            type="number"
+            value={currentPrice}
+            onChange={(e) => setCurrentPrice(e.target.value)}
+            placeholder="現在値を入力"
+            style={{ padding: '5px', width: '120px' }}
+          />
+        </div>
+
+        {profit !== null && (
+          <div style={{ fontSize: '1.2em' }}>
+            <strong>想定利益: </strong>
+            <span style={{ color: profit >= 0 ? 'blue' : 'red', fontWeight: 'bold' }}>
+              {profit >= 0 ? '+' : ''}{profit.toLocaleString()} 円
+            </span>
+          </div>
+        )}
+      </div>
+      {/* 表示部分 */}
+      <button onClick={handleRegisterOppositeTrade} style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}>
+        この条件で反対売買を登録する
+      </button>
     </div>
   );
 };
