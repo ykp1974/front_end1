@@ -28,7 +28,7 @@ const RecordFormPage: React.FC = () => {
 
   // 追加：起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJq7lYKUQ1t42Y0VSmM_6MZ2orwdAeCwgYZQeEMppfd8pIRJlOHJPpNPmRsOqiIuM/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZ-LFk0JXOFrn251F0YQVUHT-o704bjQbDkPCJyOgIDokDGtpxCd2sZC1vNvYnloam/exec';
     fetch(GAS_URL)
       .then(res => res.json())
       .then(data => setTickers(data.tickers))
@@ -116,7 +116,7 @@ const RecordFormPage: React.FC = () => {
     if (!formData.ticker) return;
 
     // 公開されたCSVのURL
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1v4cTk72DuaaZNzQqfLVg5uxZoxwVpiuDCIihYrLnTXIrSys3_z50DhlEOhDdLScVeKOXs8zr6Zin/pub?gid=0&single=true&output=csv';
+    const CSV_URL = 'https://script.google.com/macros/s/AKfycbwZ-LFk0JXOFrn251F0YQVUHT-o704bjQbDkPCJyOgIDokDGtpxCd2sZC1vNvYnloam/exec';
 
     try {
       const res = await fetch(CSV_URL);

@@ -2,7 +2,7 @@ import type { TradeRecord } from '../types/TradeRecord';
 
 const LOCAL_STORAGE_KEY = 'investment_records';
 
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzVT4X5yJpBDuD4nLxF94Q8VUphihmBgjYed4tTfD94NhgXZMQunILzvp20x8_P_NtE/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwZ-LFk0JXOFrn251F0YQVUHT-o704bjQbDkPCJyOgIDokDGtpxCd2sZC1vNvYnloam/exec';
 
 export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => {
   try {
@@ -11,7 +11,7 @@ export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => 
 
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      body: JSON.stringify({ record }),
+      body: JSON.stringify({ record: record }),
       mode: 'no-cors', // ブラウザの制限を回避
       headers: {
         'Content-Type': 'text/plain', // プリフライトリクエストを回避
@@ -31,7 +31,7 @@ export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => 
  */
 export const fetchRecordsFromGAS = async (): Promise<TradeRecord[]> => {
   // 必要に応じて doGet(e) をGAS側に実装し、ここでfetchする
-  return []; 
+  return [];
 };
 
 /**
