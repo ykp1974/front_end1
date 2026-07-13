@@ -55,6 +55,7 @@ const RecordDetailPage: React.FC = () => {
     fetchData();
   }, [id]);
 
+  if (loading) return <div>読み込み中...</div>;
   if (!record) return <div>記録が見つかりません。</div>;
 
   return (
