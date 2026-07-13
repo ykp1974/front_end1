@@ -2,7 +2,7 @@ import type { TradeRecord } from '../types/TradeRecord';
 
 const LOCAL_STORAGE_KEY = 'investment_records';
 
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWJq2l-_DbZQapcTfermQFGT8AW5cVDpd8MutNr3v9nQsTrjh9BGm98YUShE1x8YA/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzap2nHEqI5K_ooqcPZgnrLYCkGNQpIa2ur9hiaLWsWhvVutbLPU43m0LA1lkL6Dh8p/exec';
 
 export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => {
   try {

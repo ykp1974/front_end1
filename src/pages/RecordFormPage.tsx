@@ -18,6 +18,7 @@ const RecordFormPage: React.FC = () => {
     tradeType: 'BUY', // デフォルト値
     price: 0,
     reason: '',
+    originPrice: null, // ★初期値
   });
 
   // 追加：銘柄リストのステート
@@ -28,10 +29,20 @@ const RecordFormPage: React.FC = () => {
 
   // 追加：起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJq7lYKUQ1t42Y0VSmM_6MZ2orwdAeCwgYZQeEMppfd8pIRJlOHJPpNPmRsOqiIuM/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzap2nHEqI5K_ooqcPZgnrLYCkGNQpIa2ur9hiaLWsWhvVutbLPU43m0LA1lkL6Dh8p/exec';
     fetch(GAS_URL)
       .then(res => res.json())
-      .then(data => setTickers(data.tickers))
+      .then(data => {
+        if (Array.isArray(data)) {
+          // ログの内容に合わせて symbol と name を抽出（またはそのまま使う）
+          // handleChangeのロジックが `t.symbol` を期待しているので合わせます
+          const formattedTickers = data.map(item => ({
+            symbol: item.ticker.toString(), // 9090 を文字列に変換
+            name: item.symbolName
+          }));
+          setTickers(formattedTickers);
+        }
+      })
       .catch(err => console.error("銘柄取得失敗:", err));
   }, []);
 
@@ -45,7 +56,8 @@ const RecordFormPage: React.FC = () => {
         ticker: prefill.ticker || '',
         tradeType: prefill.tradeType || 'BUY',
         price: prefill.price || 0,
-        tradeDate: prefill.tradeDate || ''
+        tradeDate: prefill.tradeDate || '',
+        originPrice: prefill.originPrice || null // ★受け取り
       }));
       setIsInitialized(true); // ★フラグを立てる
     }
@@ -86,18 +98,22 @@ const RecordFormPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // ページリロードを防止
     // FormDataを使用して入力値を取得
-    const formData = new FormData(event.currentTarget);
+    // const formData = new FormData(event.currentTarget);
 
     // TradeRecord型に合わせたオブジェクトを作成 
     const record: TradeRecord = {
-      id: crypto.randomUUID(), // IDの生成例
-      symbolName: formData.get('symbolName') as string,
-      ticker: formData.get('ticker') as string,
-      tradeDate: formData.get('tradeDate') as string,
-      tradeType: formData.get('tradeType') as 'BUY' | 'SELL', // select要素などを想定
-      price: Number(formData.get('price')),
-      reason: formData.get('reason') as string,
-      createdAt: new Date().toISOString(), // 現在時刻を文字列で保存
+      id: crypto.randomUUID(),
+      symbolName: formData.symbolName, // ここでエラーが出なくなります
+      ticker: formData.ticker,
+      tradeDate: formData.tradeDate,
+      tradeType: formData.tradeType,
+      price: Number(formData.price),
+      reason: formData.reason,
+      createdAt: new Date().toISOString(),
+      // ここでステートの値を参照
+      isPositionClose: formData.isPositionClose,
+      originPrice: formData.originPrice,
+      profit: formData.originPrice ? Number(formData.price) - formData.originPrice : 0
     };
 
     const success = await saveRecordToGAS(record);
@@ -166,7 +182,8 @@ const RecordFormPage: React.FC = () => {
           <label>銘柄リストから選択:</label>
           <select name="tickerSelector" onChange={handleChange} style={{ width: '100%', padding: '8px' }}>
             <option value="">-- 銘柄を選択 --</option>
-            {tickers.map(t => (
+            {/* ここで ?. を使い、配列でない場合も考慮する */}
+            {Array.isArray(tickers) && tickers?.map(t => (
               <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
             ))}
           </select>
@@ -254,9 +271,22 @@ const RecordFormPage: React.FC = () => {
             style={{ width: '100%', padding: '8px' }}
           />
         </div>
-        <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
-          記録を保存
-        </button>
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+          {prefill ? (
+            // ★ここが「決済取引」として登録するボタン
+            <button
+              type="submit"
+              onClick={() => setFormData(prev => ({ ...prev, isPositionClose: true }))}
+              style={{ padding: '10px 20px', backgroundColor: '#d9534f', color: 'white', border: 'none', cursor: 'pointer' }}
+            >
+              決済取引として登録（収支を記録）
+            </button>
+          ) : (
+            <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
+              記録を保存
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
