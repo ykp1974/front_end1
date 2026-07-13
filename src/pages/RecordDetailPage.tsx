@@ -15,7 +15,7 @@ const RecordDetailPage: React.FC = () => {
   const profit = currentPrice !== '' ? Number(currentPrice) - Number(record?.price || 0) : null;
 
   const handleRegisterOppositeTrade = () => {
-    navigate('/record-form', {
+    navigate('/records/new', {
       state: {
         symbolName: record?.symbolName,
         ticker: record?.ticker,
