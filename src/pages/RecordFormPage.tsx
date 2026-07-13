@@ -18,6 +18,7 @@ const RecordFormPage: React.FC = () => {
     tradeType: 'BUY', // デフォルト値
     price: 0,
     reason: '',
+    originPrice: null as number | null, // 初期値はnull
   });
 
   // 追加：銘柄リストのステート
@@ -42,8 +43,10 @@ const RecordFormPage: React.FC = () => {
         ticker: prefill.ticker || '',
         tradeType: prefill.tradeType || 'BUY',
         price: prefill.price || 0,
-        tradeDate: prefill.tradeDate || ''
+        tradeDate: prefill.tradeDate || '',
+        originPrice: prefill.originPrice
       }));
+      console.log('originPrice->' + prefill.originPrice);
     }
   }, [prefill]);
 
@@ -82,18 +85,22 @@ const RecordFormPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // ページリロードを防止
     // FormDataを使用して入力値を取得
-    const formData = new FormData(event.currentTarget);
+    // const formData = new FormData(event.currentTarget);
 
     // TradeRecord型に合わせたオブジェクトを作成 
     const record: TradeRecord = {
       id: crypto.randomUUID(), // IDの生成例
-      symbolName: formData.get('symbolName') as string,
-      ticker: formData.get('ticker') as string,
-      tradeDate: formData.get('tradeDate') as string,
-      tradeType: formData.get('tradeType') as 'BUY' | 'SELL', // select要素などを想定
-      price: Number(formData.get('price')),
-      reason: formData.get('reason') as string,
-      createdAt: new Date().toISOString(), // 現在時刻を文字列で保存
+      symbolName: formData.symbolName,
+      ticker: formData.ticker,
+      tradeDate: formData.tradeDate,
+      tradeType: formData.tradeType,
+      price: formData.price,
+      reason: formData.reason,
+      createdAt: new Date().toISOString(),
+      // 修正2: ステートの値を参照して計算
+      profit: formData.originPrice
+        ? formData.price - formData.originPrice
+        : 0
     };
 
     const success = await saveRecordToGAS(record);
@@ -248,9 +255,22 @@ const RecordFormPage: React.FC = () => {
             style={{ width: '100%', padding: '8px' }}
           />
         </div>
-        <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
-          記録を保存
-        </button>
+        <div style={{ marginTop: '20px' }}>
+          {prefill ? (
+            // 反対売買専用のボタン
+            <button
+              type="submit"
+              onClick={() => setFormData(prev => ({ ...prev, isPositionClose: true }))} // 送信フラグを立てる
+              style={{ padding: '10px 20px', backgroundColor: '#d9534f', color: 'white' }}
+            >
+              決済取引として登録（収支を記録）
+            </button>
+          ) : (
+            <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
+              記録を保存
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
