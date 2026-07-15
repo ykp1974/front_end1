@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { TradeRecord } from '../types/TradeRecord';
 import { useNavigate } from 'react-router-dom';
-
+import { GAS_BASE_URL } from '../config/gasConfig';
 
 const RecordDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,10 +31,10 @@ const RecordDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // 開始時にセット
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkuDHPUujLRQfDpL9HaNcWt2fnsKPmD6PM9fb9JEwgJZhs4nU1tvX4HXn6wAziS-4t/exec';
+      setLoading(true);
       try {
-        const res = await fetch(GAS_URL);
+        // DecisionLoggerGAS#doGet(e)
+        const res = await fetch(GAS_BASE_URL);
         const allRecords: TradeRecord[] = await res.json();
 
         // ローカル関数(getRecordById)を使わず、取得した全データから探す

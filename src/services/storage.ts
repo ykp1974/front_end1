@@ -1,15 +1,16 @@
 import type { TradeRecord } from '../types/TradeRecord';
+import { GAS_BASE_URL } from '../config/gasConfig';
 
 const LOCAL_STORAGE_KEY = 'investment_records';
 
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzap2nHEqI5K_ooqcPZgnrLYCkGNQpIa2ur9hiaLWsWhvVutbLPU43m0LA1lkL6Dh8p/exec';
+// const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyWDeWXdvZnfJ2HeIo4lq4otf2Zx1353NKZWmIr7Wsh2XF-0OgRUqxIbj5S682l8iUI/exec';
 
 export const saveRecordToGAS = async (record: TradeRecord): Promise<boolean> => {
   try {
     // 従来のLocalStorageにもバックアップとして残す場合は残す
     // localStorage.setItem(`record_${record.id}`, JSON.stringify(record));
 
-    await fetch(GAS_WEBAPP_URL, {
+    await fetch(GAS_BASE_URL, {
       method: 'POST',
       body: JSON.stringify({ record }),
       mode: 'no-cors', // ブラウザの制限を回避

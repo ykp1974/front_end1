@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { TradeRecord } from '../types/TradeRecord';
+import { GAS_BASE_URL } from '../config/gasConfig';
 
 const RecordListPage: React.FC = () => {
   const [records, setRecords] = useState<TradeRecord[]>([]);
@@ -10,11 +11,9 @@ const RecordListPage: React.FC = () => {
     // setRecords(loadRecords()); // 旧処理…LocalStorageから取得
     // データを取得する関数
     const fetchRecords = async () => {
-      // あなたのGASウェブアプリURL（doGetが実装されているもの）
-      const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkuDHPUujLRQfDpL9HaNcWt2fnsKPmD6PM9fb9JEwgJZhs4nU1tvX4HXn6wAziS-4t/exec';
-
       try {
-        const response = await fetch(GAS_URL);
+        // DecisionLoggerGAS#doGet(e)
+        const response = await fetch(GAS_BASE_URL);
         if (!response.ok) throw new Error('データの取得に失敗しました');
 
         const data: TradeRecord[] = await response.json();

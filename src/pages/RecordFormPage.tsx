@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import type { TradeRecord } from '../types/TradeRecord';
 import { saveRecordToGAS } from '../services/storage';
 import { useLocation, Link } from 'react-router-dom'; // Link を追加
+import { GAS_BASE_URL } from '../config/gasConfig';
+
+type ChartTicker = {
+  symbol: string;
+  name: string;
+  ticker: string;
+};
 
 const PREFIX_MAP: Record<string, string> = {
   "[w]": "ダブルボトム ",
@@ -19,6 +26,7 @@ const RecordFormPage: React.FC = () => {
     price: 0,
     reason: '',
     originPrice: null, // ★初期値
+    isPositionClose: false,
   });
 
   // 追加：銘柄リストのステート
@@ -26,11 +34,13 @@ const RecordFormPage: React.FC = () => {
   const location = useLocation();
   const prefill = location.state; // 遷移時に送ったデータがここに入ります
   const [isInitialized, setIsInitialized] = useState(false); // ★フラグを追加
+  // ChartShapeChecker用のデータ状態を追加
+  const [chartTickers, setChartTickers] = useState<ChartTicker[]>([]);
 
-  // 追加：起動時にスプシから銘柄リストを取得
+  // 起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzap2nHEqI5K_ooqcPZgnrLYCkGNQpIa2ur9hiaLWsWhvVutbLPU43m0LA1lkL6Dh8p/exec';
-    fetch(GAS_URL)
+    // DecisionLoggerGAS#doGet
+    fetch(GAS_BASE_URL)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -44,6 +54,23 @@ const RecordFormPage: React.FC = () => {
         }
       })
       .catch(err => console.error("銘柄取得失敗:", err));
+  }, []);
+
+  // ChartShapeCheckerから保存された銘柄情報を取得
+  useEffect(() => {
+    fetch(`${GAS_BASE_URL}?sheet=ChartShapeChecker`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("GASからのレスポンス:", data); // これで中身をデバッグします
+        // data自体が配列ならそのまま使う、そうでなければ tickers プロパティを探す
+        const list = Array.isArray(data) ? data : data.tickers;
+        if (list && Array.isArray(list)) {
+          const valid = list.filter((t: any) => t && t.symbol !== 'DEBUG_START');
+          setChartTickers(valid);
+        } else {
+          console.error("データが配列形式ではありません");
+        }
+      }).catch(err => console.error("銘柄取得失敗:", err));
   }, []);
 
   useEffect(() => {
@@ -62,6 +89,21 @@ const RecordFormPage: React.FC = () => {
       setIsInitialized(true); // ★フラグを立てる
     }
   }, [prefill, isInitialized]);
+
+  // 3. セレクトボックス変更時のハンドラ
+  const handleChartTickerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedSymbol = e.target.value;
+    const selectedData = chartTickers.find(t => t.symbol === selectedSymbol);
+
+    if (selectedData) {
+      // 選択された銘柄情報をフォームに反映
+      setFormData(prev => ({
+        ...prev,
+        symbolName: selectedData.name,
+        ticker: selectedData.ticker // もしくは symbol
+      }));
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -118,7 +160,7 @@ const RecordFormPage: React.FC = () => {
 
     const success = await saveRecordToGAS(record);
     if (success) {
-      alert("スプレッドシートに保存しました！");
+      alert("スプレッドシートに保存しました！[saveRecordToGAS]");
     } else {
       alert("保存に失敗しました。");
     }
@@ -177,7 +219,22 @@ const RecordFormPage: React.FC = () => {
       </Link>
       <h1>新規投資記録の追加</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
-        {/* 追加：銘柄選択用ListBox */}
+        {/* 銘柄選択用ListBox - ChartShapeChecker由来 */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">ChartShapeChecker から呼び出し:</label>
+          <select
+            onChange={handleChartTickerSelect}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">-- 銘柄を選択して入力項目を埋める --</option>
+            {chartTickers.map(t => (
+              <option key={t.symbol} value={t.symbol}>
+                {t.symbol} - {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* 銘柄選択用ListBox */}
         <div>
           <label>銘柄リストから選択:</label>
           <select name="tickerSelector" onChange={handleChange} style={{ width: '100%', padding: '8px' }}>
