@@ -23,7 +23,7 @@ const RecordFormPage: React.FC = () => {
     ticker: '',
     tradeDate: '',
     tradeType: 'BUY', // デフォルト値
-    price: 0,
+    price: '',
     reason: '',
     originPrice: null, // ★初期値
     isPositionClose: false,
