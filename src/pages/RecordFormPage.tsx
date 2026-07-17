@@ -172,7 +172,7 @@ const RecordFormPage: React.FC = () => {
 
     // 公開されたCSVのURL
     // ★ここはGASデプロイ時に書き換えない！！★
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1v4cTk72DuaaZNzQqfLVg5uxZoxwVpiuDCIihYrLnTXIrSys3_z50DhlEOhDdLScVeKOXs8zr6Zin/pub?gid=0&single=true&output=csv';
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSXe8ngbLaXPfBCA9zHoq_CPnNcErjjngtU1NXuCOg-V2AxsTD8klqBnGZZo8Bp21aqzaRx_DtwgQM/pub?gid=930928897&single=true&output=csv';
 
     try {
       const res = await fetch(CSV_URL);
@@ -180,6 +180,7 @@ const RecordFormPage: React.FC = () => {
 
       // CSVをパースして該当ティッカーを探す
       const rows = text.split('\n').map(row => row.split(','));
+
       // 行を検索（データ行が2行目以降と想定）
       const foundRow = rows.find(r => r[2] === formData.ticker);
 
