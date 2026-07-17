@@ -82,7 +82,7 @@ const RecordFormPage: React.FC = () => {
         symbolName: prefill.symbolName || '',
         ticker: prefill.ticker || '',
         tradeType: prefill.tradeType || 'BUY',
-        price: prefill.price || 0,
+        price: prefill.price || '',
         tradeDate: prefill.tradeDate || '',
         originPrice: prefill.originPrice || null // ★受け取り
       }));
