@@ -17,6 +17,15 @@ const PREFIX_MAP: Record<string, string> = {
   // 必要に応じて追加してください
 };
 
+// input type="date" 用 (YYYY-MM-DD)
+const getTodayString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const RecordFormPage: React.FC = () => {
   const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'>>({
     symbolName: '',
@@ -100,7 +109,8 @@ const RecordFormPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         symbolName: selectedData.name,
-        ticker: selectedData.ticker // もしくは symbol
+        ticker: selectedData.ticker, // もしくは symbol
+        tradeDate: getTodayString(), // 取引日付を自動的に本日の日付に設定
       }));
     }
   };
