@@ -26,13 +26,25 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`;
 };
 
+/**
+ * 選択されたシンボル名（例: "[w]大黒天物産9090"）から、
+ * ティッカー（末尾4桁）と自動設定理由を生成する純粋関数
+ */
+export const parseTickerSymbolAndReason = (symbolText: string): { cleanTicker: string; autoReason: string } => {
+  const cleanTicker = symbolText.slice(-4);
+  const remaining = symbolText.slice(0, -4);
+  const prefix = Object.keys(PREFIX_MAP).find(p => remaining.startsWith(p));
+  const autoReason = prefix ? `${remaining}:${PREFIX_MAP[prefix]}` : `${remaining}:`;
+  return { cleanTicker, autoReason };
+};
+
 const RecordFormPage: React.FC = () => {
-  const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'>>({
+  const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'> & { price: number | '' }>({
     symbolName: '',
     ticker: '',
     tradeDate: '',
     tradeType: 'BUY', // デフォルト値
-    price: "" as unknown as number,
+    price: '',
     reason: '',
     originPrice: null, // ★初期値
     isPositionClose: false,
@@ -121,29 +133,20 @@ const RecordFormPage: React.FC = () => {
     if (name === 'tickerSelector') {
       const selected = tickers.find(t => t.symbol === value);
       if (selected) {
-        // 末尾4桁のみとする
-        const cleanTicker = selected.symbol.slice(-4);
-        // 本日日付の取得 (yyyy-mm-dd 形式)
-        const today = new Date().toISOString().split('T')[0];
-        // 接頭句を特定 (例: "[w]")
-        const remaining = selected.symbol.slice(0, -4); // 例: "[w]大黒天物産"
-        const prefix = Object.keys(PREFIX_MAP).find(p => remaining.startsWith(p));
-
-        // 接頭句があればそれをreasonに、なければ空文字に
-        const autoReason = prefix ? PREFIX_MAP[prefix] : '';
+        const { cleanTicker, autoReason } = parseTickerSymbolAndReason(selected.symbol);
         setFormData(prev => ({
           ...prev,
           ticker: cleanTicker,
           symbolName: selected.name,
-          tradeDate: today, // 日付自動入力
-          reason: remaining + ":" + autoReason
+          tradeDate: getTodayString(), // 共通化された日付自動入力
+          reason: autoReason
         }));
       }
       return;
     }
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'price' ? Number(value) : value,
+      [name]: name === 'price' ? (value === '' ? '' : Number(value)) : value,
     }));
   };
 
@@ -312,7 +315,7 @@ const RecordFormPage: React.FC = () => {
             type="number"
             id="price"
             name="price"
-            value={formData.price === 0 ? "" : formData.price}
+            value={formData.price}
             onChange={handleChange}
             required
             min="0"

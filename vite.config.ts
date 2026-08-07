@@ -14,5 +14,15 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/exec') // /api を /exec に書き換える
       }
     }
+  },
+  // @ts-ignore
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    pool: 'threads',
+    threads: {
+      singleThread: true,
+    },
   }
 })

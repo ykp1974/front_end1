@@ -13,8 +13,7 @@ const RecordDetailPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   // 取得価格（record.price）と現在値の差分を計算
-  // priceは文字列で保存されている可能性があるため、Numberで数値化します
-  const profit = currentPrice !== '' ? Number(currentPrice) - Number(record?.price || 0) : null;
+  const profit = (currentPrice && record) ? Number(currentPrice) - record.price : null;
 
   const handleRegisterOppositeTrade = () => {
     navigate('/records/new', {
