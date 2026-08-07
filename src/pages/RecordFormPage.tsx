@@ -44,7 +44,7 @@ const RecordFormPage: React.FC = () => {
     ticker: '',
     tradeDate: '',
     tradeType: 'BUY', // デフォルト値
-    price: '',
+    price: 0,
     reason: '',
     originPrice: null, // ★初期値
     isPositionClose: false,
@@ -103,7 +103,7 @@ const RecordFormPage: React.FC = () => {
         symbolName: prefill.symbolName || '',
         ticker: prefill.ticker || '',
         tradeType: prefill.tradeType || 'BUY',
-        price: prefill.price || 0,
+        price: prefill.price !== undefined && prefill.price !== null ? prefill.price : '',
         tradeDate: prefill.tradeDate || '',
         originPrice: prefill.originPrice || null // ★受け取り
       }));

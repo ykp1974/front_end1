@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -58,7 +57,7 @@ describe('RecordDetailPage.tsx', () => {
     expect(screen.getByRole('heading', { name: 'Test Stock A (AAPL)' })).toBeInTheDocument();
     expect(screen.getByText('150')).toBeInTheDocument();
     expect(screen.getByText('Good entry')).toBeInTheDocument();
-    
+
     // 同一ティッカーの関連レコードが表示されていることを確認
     expect(screen.getByText('Test Stock B')).toBeInTheDocument();
   });
