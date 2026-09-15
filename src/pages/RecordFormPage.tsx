@@ -79,7 +79,7 @@ const RecordFormPage: React.FC = () => {
 
   // ChartShapeCheckerから保存された銘柄情報を取得
   useEffect(() => {
-    fetch(`${GAS_BASE_URL}?sheet=ChartShapeChecker`)
+    fetch(`${GAS_BASE_URL}?sheet=PickedUpList`)
       .then(res => res.json())
       .then(data => {
         console.log("GASからのレスポンス:", data); // これで中身をデバッグします
