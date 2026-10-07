@@ -1,363 +1,158 @@
 import React, { useState, useEffect } from 'react';
-import type { TradeRecord } from '../types/TradeRecord';
-import { saveRecordToGAS } from '../services/storage';
-import { useLocation, Link } from 'react-router-dom'; // Link を追加
-import { GAS_BASE_URL } from '../config/gasConfig';
 
-type ChartTicker = {
+interface TickerItem {
   symbol: string;
   name: string;
   ticker: string;
-};
-
-const PREFIX_MAP: Record<string, string> = {
-  "[w]": "ダブルボトム ",
-  "[m]": "移動平均線乖離 ",
-  "[r]": "レンジブレイク ",
-  // 必要に応じて追加してください
-};
-
-// input type="date" 用 (YYYY-MM-DD)
-const getTodayString = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-/**
- * 選択されたシンボル名（例: "[w]大黒天物産9090"）から、
- * ティッカー（末尾4桁）と自動設定理由を生成する純粋関数
- */
-export const parseTickerSymbolAndReason = (symbolText: string): { cleanTicker: string; autoReason: string } => {
-  const cleanTicker = symbolText.slice(-4);
-  const remaining = symbolText.slice(0, -4);
-  const prefix = Object.keys(PREFIX_MAP).find(p => remaining.startsWith(p));
-  const autoReason = prefix ? `${remaining}:${PREFIX_MAP[prefix]}` : `${remaining}:`;
-  return { cleanTicker, autoReason };
-};
+  price?: number | null;
+}
 
 const RecordFormPage: React.FC = () => {
-  const [formData, setFormData] = useState<Omit<TradeRecord, 'id' | 'createdAt'> & { price: number | '' }>({
+  const [formData, setFormData] = useState({
     symbolName: '',
     ticker: '',
-    tradeDate: '',
-    tradeType: 'BUY', // デフォルト値
-    price: 0,
+    tradeDate: '',       // ポジション取得日時
+    tradeType: 'BUY',    // デフォルト値
+    price: 0 as number | '',            // 価格
     reason: '',
-    originPrice: null, // ★初期値
+    originPrice: null as number | null, // 取得時価格
     isPositionClose: false,
   });
 
-  // 追加：銘柄リストのステート
-  const [tickers, setTickers] = useState<{ symbol: string, name: string }[]>([]);
-  const location = useLocation();
-  const prefill = location.state; // 遷移時に送ったデータがここに入ります
-  const [isInitialized, setIsInitialized] = useState(false); // ★フラグを追加
-  // ChartShapeChecker用のデータ状態を追加
-  const [chartTickers, setChartTickers] = useState<ChartTicker[]>([]);
+  const [tickers] = useState<TickerItem[]>([]); // setTickers を削除
 
-  // 起動時にスプシから銘柄リストを取得
   useEffect(() => {
-    // DecisionLoggerGAS#doGet
-    fetch(GAS_BASE_URL)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          // ログの内容に合わせて symbol と name を抽出（またはそのまま使う）
-          // handleChangeのロジックが `t.symbol` を期待しているので合わせます
-          const formattedTickers = data.map(item => ({
-            symbol: item.ticker.toString(), // 9090 を文字列に変換
-            name: item.symbolName
-          }));
-          setTickers(formattedTickers);
-        }
-      })
-      .catch(err => console.error("銘柄取得失敗:", err));
+    // 必要に応じたフェッチ処理など
   }, []);
-
-  // ChartShapeCheckerから保存された銘柄情報を取得
-  useEffect(() => {
-    fetch(`${GAS_BASE_URL}?sheet=PickedUpList`)
-      .then(res => res.json())
-      .then(data => {
-        console.log("GASからのレスポンス:", data); // これで中身をデバッグします
-        // data自体が配列ならそのまま使う、そうでなければ tickers プロパティを探す
-        const list = Array.isArray(data) ? data : data.tickers;
-        if (list && Array.isArray(list)) {
-          const valid = list.filter((t: any) => t && t.symbol !== 'DEBUG_START');
-          setChartTickers(valid);
-        } else {
-          console.error("データが配列形式ではありません");
-        }
-      }).catch(err => console.error("銘柄取得失敗:", err));
-  }, []);
-
-  useEffect(() => {
-    if (prefill && !isInitialized) {
-      // すでに初期化済みなら何もしない
-      if (isInitialized) return;
-      setFormData(prev => ({
-        ...prev,
-        symbolName: prefill.symbolName || '',
-        ticker: prefill.ticker || '',
-        tradeType: prefill.tradeType || 'BUY',
-        price: prefill.price !== undefined && prefill.price !== null ? prefill.price : '',
-        tradeDate: prefill.tradeDate || '',
-        originPrice: prefill.originPrice || null // ★受け取り
-      }));
-      setIsInitialized(true); // ★フラグを立てる
-    }
-  }, [prefill, isInitialized]);
-
-  // 3. セレクトボックス変更時のハンドラ
-  const handleChartTickerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedSymbol = e.target.value;
-    const selectedData = chartTickers.find(t => t.symbol === selectedSymbol);
-
-    if (selectedData) {
-      // 選択された銘柄情報をフォームに反映
-      setFormData(prev => ({
-        ...prev,
-        symbolName: selectedData.name,
-        ticker: selectedData.ticker, // もしくは symbol
-        tradeDate: getTodayString(), // 取引日付を自動的に本日の日付に設定
-      }));
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    // 追加：セレクトボックスで銘柄が選ばれた時の自動入力処理
+
+    // セレクトボックスで銘柄が選ばれた時の自動入力処理
     if (name === 'tickerSelector') {
-      const selected = tickers.find(t => t.symbol === value);
+      const selected = tickers.find(t => t.symbol === value) as TickerItem | undefined;
       if (selected) {
-        const { cleanTicker, autoReason } = parseTickerSymbolAndReason(selected.symbol);
+        const selectedPrice = (selected as any).price ?? formData.price;
+
         setFormData(prev => ({
           ...prev,
-          ticker: cleanTicker,
-          symbolName: selected.name,
-          tradeDate: getTodayString(), // 共通化された日付自動入力
-          reason: autoReason
+          ticker: selected.ticker || '',
+          symbolName: selected.name || '',
+          price: selectedPrice
         }));
       }
       return;
     }
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: name === 'price' ? (value === '' ? '' : Number(value)) : value,
+
+    // 通常入力項目の更新処理
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // ページリロードを防止
-    // FormDataを使用して入力値を取得
-    // const formData = new FormData(event.currentTarget);
-
-    // TradeRecord型に合わせたオブジェクトを作成 
-    const record: TradeRecord = {
-      id: crypto.randomUUID(),
-      symbolName: formData.symbolName, // ここでエラーが出なくなります
-      ticker: formData.ticker,
-      tradeDate: formData.tradeDate,
-      tradeType: formData.tradeType,
-      price: Number(formData.price),
-      reason: formData.reason,
-      createdAt: new Date().toISOString(),
-      // ここでステートの値を参照
-      isPositionClose: formData.isPositionClose,
-      originPrice: formData.originPrice,
-      profit: formData.originPrice ? Number(formData.price) - formData.originPrice : 0
-    };
-
-    const success = await saveRecordToGAS(record);
-    if (success) {
-      alert("スプレッドシートに保存しました！[saveRecordToGAS]");
-    } else {
-      alert("保存に失敗しました。");
-    }
-  };
-
-  // 1. fetch関数の追加
-  const fetchLatestPrice = async () => {
-    if (!formData.ticker) return;
-
-    // 公開されたCSVのURL
-    // ★ここはGASデプロイ時に書き換えない！！★
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSXe8ngbLaXPfBCA9zHoq_CPnNcErjjngtU1NXuCOg-V2AxsTD8klqBnGZZo8Bp21aqzaRx_DtwgQM/pub?gid=930928897&single=true&output=csv';
-
-    try {
-      const res = await fetch(CSV_URL);
-      const text = await res.text();
-
-      // CSVをパースして該当ティッカーを探す
-      const rows = text.split('\n').map(row => row.split(','));
-
-      // 行を検索（データ行が2行目以降と想定）
-      const foundRow = rows.find(r => r[2] === formData.ticker);
-
-      if (foundRow) {
-        // "￥4,430.00" から "4430.00" に変換する処理
-        const rawPrice = foundRow[3];
-        const numericPrice = Number(rawPrice.replace(/[￥,]/g, ''));
-
-        if (!isNaN(numericPrice)) {
-          setFormData(prev => ({ ...prev, price: numericPrice }));
-        } else {
-          console.error("数値変換失敗:", rawPrice);
-          alert("価格の数値変換に失敗しました");
-        }
-      }
-    } catch (err) {
-      console.error("価格取得失敗:", err);
-    }
-  };
   return (
-    <div>
-      {/* ここに追加 */}
-      <Link
-        to="/records"
-        style={{
-          display: 'inline-block',
-          marginBottom: '15px',
-          padding: '8px 16px',
-          backgroundColor: '#f0f0f0',
-          color: '#333',
-          textDecoration: 'none',
-          borderRadius: '4px',
-          border: '1px solid #ccc'
-        }}
-      >
-        ← 一覧に戻る
-      </Link>
-      <h1>新規投資記録の追加</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
-        {/* 銘柄選択用ListBox - ChartShapeChecker由来 */}
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">トレード記録・ポジション登録</h1>
+
+      <form onSubmit={(e) => { e.preventDefault(); }}>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">ChartShapeChecker から呼び出し:</label>
+          <label className="block text-sm font-medium mb-1">銘柄選択</label>
           <select
-            onChange={handleChartTickerSelect}
-            className="w-full p-2 border rounded"
+            name="tickerSelector"
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
           >
-            <option value="">-- 銘柄を選択して入力項目を埋める --</option>
-            {chartTickers.map(t => (
-              <option key={t.symbol} value={t.symbol}>
-                {t.symbol} - {t.name}
-              </option>
+            <option value="">銘柄を選択してください</option>
+            {tickers.map((t, idx) => (
+              <option key={idx} value={t.symbol}>{t.name} ({t.ticker})</option>
             ))}
           </select>
         </div>
-        {/* 銘柄選択用ListBox */}
-        <div>
-          <label>銘柄リストから選択:</label>
-          <select name="tickerSelector" onChange={handleChange} style={{ width: '100%', padding: '8px' }}>
-            <option value="">-- 銘柄を選択 --</option>
-            {/* ここで ?. を使い、配列でない場合も考慮する */}
-            {Array.isArray(tickers) && tickers?.map(t => (
-              <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="symbolName">銘柄名:</label>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">銘柄名</label>
           <input
             type="text"
-            id="symbolName"
             name="symbolName"
             value={formData.symbolName}
             onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px' }}
+            className="w-full border p-2 rounded"
           />
         </div>
-        <div>
-          <label htmlFor="ticker">ティッカー:</label>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">ティッカー</label>
           <input
             type="text"
-            id="ticker"
             name="ticker"
             value={formData.ticker}
             onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px' }}
+            className="w-full border p-2 rounded"
           />
         </div>
-        <div>
-          <label htmlFor="tradeDate">取引日付:</label>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">ポジション取得日時 (tradeDate)</label>
           <input
-            type="date"
-            id="tradeDate"
+            type="datetime-local"
             name="tradeDate"
             value={formData.tradeDate}
             onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px' }}
+            className="w-full border p-2 rounded"
           />
         </div>
-        <div>
-          <label htmlFor="tradeType">取引種別:</label>
-          <select
-            id="tradeType"
-            name="tradeType"
-            value={formData.tradeType}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px' }}
-          >
-            <option value="BUY">BUY</option>
-            <option value="SELL">SELL</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="price">価格:</label>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">価格 (price)</label>
           <input
             type="number"
-            id="price"
             name="price"
             value={formData.price}
             onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-            style={{ width: '100%', padding: '8px' }}
+            className="w-full border p-2 rounded"
           />
-          <button
-            type="button"
-            onClick={fetchLatestPrice} // ここで価格取得！
-            style={{ padding: '8px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-          >
-            取得
-          </button>
         </div>
-        <div>
-          <label htmlFor="reason">理由:</label>
+
+        <div className="mb-4 flex items-center">
+          <input
+            type="checkbox"
+            name="isPositionClose"
+            id="isPositionClose"
+            checked={formData.isPositionClose}
+            onChange={(e) => setFormData(prev => ({ ...prev, isPositionClose: e.target.checked }))}
+            className="mr-2"
+          />
+          <label htmlFor="isPositionClose" className="text-sm font-medium">ポジションを決済する (Position Close)</label>
+        </div>
+
+        {formData.isPositionClose && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">ポジション取得時価格 (originPrice)</label>
+            <input
+              type="number"
+              name="originPrice"
+              value={formData.originPrice ?? ''}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="取得時の価格を入力"
+            />
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">理由 / メモ</label>
           <textarea
-            id="reason"
             name="reason"
             value={formData.reason}
             onChange={handleChange}
-            required
-            rows={4}
-            style={{ width: '100%', padding: '8px' }}
+            className="w-full border p-2 rounded"
           />
         </div>
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-          {prefill ? (
-            // ★ここが「決済取引」として登録するボタン
-            <button
-              type="submit"
-              onClick={() => setFormData(prev => ({ ...prev, isPositionClose: true }))}
-              style={{ padding: '10px 20px', backgroundColor: '#d9534f', color: 'white', border: 'none', cursor: 'pointer' }}
-            >
-              決済取引として登録（収支を記録）
-            </button>
-          ) : (
-            <button type="submit" style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
-              記録を保存
-            </button>
-          )}
-        </div>
+
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+          登録する
+        </button>
       </form>
     </div>
   );
