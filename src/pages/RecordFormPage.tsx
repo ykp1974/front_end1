@@ -106,7 +106,8 @@ const RecordFormPage: React.FC = () => {
         tradeType: prefill.tradeType || 'BUY',
         price: prefill.price !== undefined && prefill.price !== null ? prefill.price : '',
         tradeDate: prefill.tradeDate || '',
-        originPrice: prefill.originPrice || null // ★受け取り
+        originPrice: prefill.originPrice || null, // ★受け取り
+        originalTradeDate: prefill.originalTradeDate || null, // ★受け取り
       }));
       setIsInitialized(true); // ★フラグを立てる
     }
