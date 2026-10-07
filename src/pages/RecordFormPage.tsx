@@ -167,7 +167,7 @@ const RecordFormPage: React.FC = () => {
       price: Number(formData.price),
       reason: formData.reason,
       createdAt: new Date().toISOString(),
-      // ここでステートの値を参照
+      originalTradeDate: formData.originalTradeDate,
       isPositionClose: formData.isPositionClose,
       originPrice: formData.originPrice,
       profit: formData.originPrice ? Number(formData.price) - formData.originPrice : 0
