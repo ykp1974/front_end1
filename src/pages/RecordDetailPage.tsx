@@ -46,7 +46,6 @@ const RecordDetailPage: React.FC = () => {
           // 同一ティッカーの他のレコードも全データから絞り込む
           setRelatedRecords(allRecords.filter(r => r.ticker === found.ticker && r.id !== id));
         }
-        console.log("詳細画面のレコードデータ:", record);
       } catch (err) {
         console.error("詳細取得エラー:", err);
       } finally {
