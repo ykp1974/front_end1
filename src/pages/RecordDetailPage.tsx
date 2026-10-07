@@ -23,7 +23,8 @@ const RecordDetailPage: React.FC = () => {
         tradeType: record?.tradeType === 'BUY' ? 'SELL' : 'BUY', // 逆の種別
         price: currentPrice, // 入力した現在値
         tradeDate: new Date().toISOString().split('T')[0], // 現在日付
-        originPrice: record?.price // ポジション取得時の価格
+        originPrice: record?.price, // ポジション取得時の価格
+        originalTradeDate: record?.tradeDate, // 元の取得日時
       }
     });
   };

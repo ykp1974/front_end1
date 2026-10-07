@@ -48,6 +48,7 @@ const RecordFormPage: React.FC = () => {
     reason: '',
     originPrice: null, // ★初期値
     isPositionClose: false,
+    originalTradeDate: null, // ★ 必要に応じて保持
   });
 
   // 追加：銘柄リストのステート

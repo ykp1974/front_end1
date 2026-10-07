@@ -11,5 +11,6 @@ export type TradeRecord = {
   createdAt: string;
   originPrice?: number | null; // ?をつけると省略可能
   isPositionClose?: boolean;
+  originalTradeDate?: string | null; // ?をつけると省略可能
   profit?: number;
 };
